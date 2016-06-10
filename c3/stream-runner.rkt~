@@ -1,0 +1,7 @@
+#lang racket
+(define range (stream-enumerate-interval
+                  10001 10010));
+(println '-----)
+(define k (stream-filter even? range))
+k
+(display-stream k)

@@ -1,0 +1,1 @@
+("6.5" ("f277c309042569fda1b2b7dac7a8d7e6ce752c46" . "75096bb309be4d70c29c123f54ed489952a7724d") #"/Users/user/Documents/courses/sicp/c2/../c3/mutable-table-2d.rkt" #"/Users/user/Documents/courses/sicp/c2/tags.rkt" (collects #"errortrace" #"errortrace-key.rkt") (collects #"racket" #"main.rkt") (collects #"racket" #"runtime-config.rkt"))

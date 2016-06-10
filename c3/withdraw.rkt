@@ -1,0 +1,40 @@
+#lang racket
+
+(define (make-account balance origpassword)
+  (define (withdraw amount)
+    (if (>= balance amount)
+        (begin (set! balance (- balance amount))
+               balance)
+        "Insufficient funds"))
+  (define (deposit amount)
+    (set! balance (+ balance amount))
+    balance)
+  (define (dispatch password m)
+    (if (not (eq? password origpassword))
+        (begin (println "Wrong pw")
+               (lambda (x) null))
+        (cond ((eq? m 'withdraw) withdraw)
+              ((eq? m 'deposit) deposit)
+              (else (error "Unknown request: MAKE-ACCOUNT"
+                           m)))))
+  dispatch)
+
+(define (make-joint account oldpw newpw)
+  (define (dispatch password m)
+    (if (not (eq? password newpw))
+        (begin (println "Wrong pw")
+               (lambda (x) null))
+        (cond ((eq? m 'withdraw) (account oldpw 'withdraw))
+              ((eq? m 'deposit) (account oldpw 'deposit))
+              (else (error "Unknown request: MAKE-ACCOUNT"
+                           m)))))
+  dispatch)
+
+(define acc (make-account 100 'foo))
+((acc 'foo 'withdraw) 50)
+((acc 'food 'withdraw) 60)
+((acc 'foo 'deposit) 12.3)
+
+(define secondacc (make-joint acc 'foof 'bar))
+((secondacc 'bar 'withdraw) 12)
+((acc 'foo 'deposit) 1)

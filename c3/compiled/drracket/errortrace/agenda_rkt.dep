@@ -1,0 +1,1 @@
+("6.5" ("e223dcedca1af130a0556408cb72befcfc5310dc" . "51e63ab9644876e0e3172c2d3cf1fd706cc9b1d6") #"/Users/user/Documents/courses/sicp/c3/mutable-queue.rkt" (collects #"errortrace" #"errortrace-key.rkt") (collects #"racket" #"main.rkt") (collects #"racket" #"runtime-config.rkt"))
