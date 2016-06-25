@@ -1,6 +1,7 @@
 #lang racket
 
-(define (cons-stream a b) (cons a b))
+(provide (all-defined-out))
+
 (define (stream-car stream) (car stream))
 (define (stream-cdr stream) (force (cdr stream)))
 
@@ -16,10 +17,26 @@
                  result)
           result))))
 
-(define (delay e) (memo-proc (lambda () e)))
-(define (force e) (e))
+(define (force e)
+  ;(println 'FORCED)
+  (e))
+
+; THIS SHIT NOT GONNA WORK
+; (delay b) already evaled when consing
+; (define (cons-stream a b) (cons a (delay b)))
+; (define (delay e) (memo-proc (lambda () e)))
+
+; special form
+(define-syntax delay
+  (syntax-rules ()
+    ((_ exp) (memo-proc (lambda () exp)))))
+
+(define-syntax cons-stream
+  (syntax-rules ()
+    ((_ a b) (cons a (delay b)))))
 
 (define (stream-enumerate-interval low high)
+  ;(println 'enumming)
   (if (> low high)
       the-empty-stream
       (cons-stream
@@ -30,15 +47,18 @@
   (if (= n 0)
       (stream-car s)
       (stream-ref (stream-cdr s) (- n 1))))
+
 (define (stream-map proc s)
   (if (stream-null? s)
       the-empty-stream
       (cons-stream (proc (stream-car s))
                    (stream-map proc (stream-cdr s)))))
+
 (define (stream-for-each proc s)
   (if (stream-null? s)
       'done
       (begin (proc (stream-car s))
+             ;(println 'before-streaming-cdr)
              (stream-for-each proc (stream-cdr s)))))
 
 (define (stream-filter pred stream)
@@ -52,4 +72,60 @@
 
 (define (display-stream s)
   (stream-for-each display-line s))
-(define (display-line x) (newline) (display x))
+(define (display-line x) (println x))
+
+(define (display-nth s n)
+  (define (iter counter stream)
+    (if (= counter n)
+        #f
+        (begin (print (stream-car stream))
+               (print " ")
+               (iter (+ 1 counter) (stream-cdr stream)))))
+  (iter 0 s))
+
+(define (stream-map1 proc . argstreams)
+  (if (null? (car argstreams))
+      the-empty-stream
+      (cons
+       (apply proc (map car argstreams))
+       (apply stream-map1
+              (cons proc (map cdr argstreams))))))
+
+(define (stream-map2 proc . argstreams)
+  (if (null? (car argstreams))
+      the-empty-stream
+      (cons-stream
+       (apply proc (map stream-car argstreams))
+       (apply stream-map2
+              (cons proc (map stream-cdr argstreams))))))
+
+(define (scale-stream s f)
+  (stream-map2 (lambda (x) (* f x)) s))
+
+(define (foo x)
+  (display "foo: ") (write x) (newline)
+  x)
+
+;(define cs (cons-stream 1 (foo 2)))
+;(println 'should-not-see-anything-before-this)
+;(stream-cdr cs)
+
+(define (merge s1 s2)
+  (cond ((stream-null? s1) s2)
+        ((stream-null? s2) s1)
+        (else
+         (let ((s1car (stream-car s1))
+               (s2car (stream-car s2)))
+           (cond ((< s1car s2car)
+                  (cons-stream
+                   s1car
+                   (merge (stream-cdr s1) s2)))
+                 ((> s1car s2car)
+                  (cons-stream
+                   s2car
+                   (merge s1 (stream-cdr s2))))
+                 (else
+                  (cons-stream
+                   s1car
+                   (merge (stream-cdr s1)
+                          (stream-cdr s2)))))))))

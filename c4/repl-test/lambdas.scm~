@@ -1,0 +1,9 @@
+(define (add-one fn)
+  (lambda (x) (+ 1 (fn x))))
+
+(define (times-five x) (* x 5))
+
+(define (add-three x) (+ x 3))
+
+(define (add-four x) (add-one add-three))
+(define (*5+1 x) (add-one times-five))

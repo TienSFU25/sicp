@@ -2,6 +2,7 @@
 
 (provide rand)
 (provide random-in-range)
+(provide rand-update)
 
 (define random-init 0)
 (define (rand-update x)

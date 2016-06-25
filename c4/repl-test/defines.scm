@@ -1,0 +1,13 @@
+(define (append x y)
+  (if (null? x)
+      y
+      (cons (car x) (append (cdr x) y))))
+
+(append '(a b c) '(d e f))
+
+(define (env-test x) (+ x 10))
+(define x 5)
+(env-test x)
+(env-test 7)
+
+x

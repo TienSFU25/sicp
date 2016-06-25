@@ -43,6 +43,12 @@
        low
        (stream-enumerate-interval (+ low 1) high))))
 
+(define (stream-from-list list)
+  (if (null? list)
+      the-empty-stream
+  (cons-stream (car list)
+               (stream-from-list (cdr list)))))
+
 (define (stream-ref s n)
   (if (= n 0)
       (stream-car s)
@@ -61,6 +67,26 @@
              ;(println 'before-streaming-cdr)
              (stream-for-each proc (stream-cdr s)))))
 
+(define (stream-while proc s)
+  (if (stream-null? s)
+      #f
+      (let ((result (proc (stream-car s))))
+        (if (equal? result #t)
+            (stream-car s)
+            (stream-while proc (stream-cdr s)))))
+  )
+
+(define (stream-while-prev proc s)
+  (define (stream-while-prev-rec curr prev)
+    (if (stream-null? s)
+        #f
+        (let ((result (proc (stream-car curr) prev)))
+          (if (equal? result #t)
+              (stream-car curr)
+              (stream-while-prev-rec (stream-cdr curr) (stream-car curr)))))
+    )
+  (stream-while-prev-rec (stream-cdr s) (stream-car s)))
+
 (define (stream-filter pred stream)
   (cond ((stream-null? stream) the-empty-stream)
         ((pred (stream-car stream))
@@ -73,6 +99,15 @@
 (define (display-stream s)
   (stream-for-each display-line s))
 (define (display-line x) (println x))
+
+(define (display-nth s n)
+  (define (iter counter stream)
+    (if (= counter n)
+        #f
+        (begin (print (stream-car stream))
+               (print " ")
+               (iter (+ 1 counter) (stream-cdr stream)))))
+  (iter 0 s))
 
 (define (stream-map1 proc . argstreams)
   (if (null? (car argstreams))
@@ -90,10 +125,33 @@
        (apply stream-map2
               (cons proc (map stream-cdr argstreams))))))
 
+(define (scale-stream s f)
+  (stream-map2 (lambda (x) (* f x)) s))
+
 (define (foo x)
   (display "foo: ") (write x) (newline)
   x)
 
-(define cs (cons-stream 1 (foo 2)))
-(println 'should-not-see-anything-before-this)
-(stream-cdr cs)
+;(define cs (cons-stream 1 (foo 2)))
+;(println 'should-not-see-anything-before-this)
+;(stream-cdr cs)
+
+(define (merge s1 s2)
+  (cond ((stream-null? s1) s2)
+        ((stream-null? s2) s1)
+        (else
+         (let ((s1car (stream-car s1))
+               (s2car (stream-car s2)))
+           (cond ((< s1car s2car)
+                  (cons-stream
+                   s1car
+                   (merge (stream-cdr s1) s2)))
+                 ((> s1car s2car)
+                  (cons-stream
+                   s2car
+                   (merge s1 (stream-cdr s2))))
+                 (else
+                  (cons-stream
+                   s1car
+                   (merge (stream-cdr s1)
+                          (stream-cdr s2)))))))))
